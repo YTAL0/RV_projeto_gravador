@@ -1,10 +1,6 @@
 <template>
   <div class="container">
-
-    <div
-      v-if="isRecording"
-      class="timer"
-    >
+    <div v-if="isRecording" class="timer">
       00:{{ remainingTime.toString().padStart(2, '0') }}
     </div>
 
@@ -13,31 +9,36 @@
       class="name-input"
       maxlength="30"
       placeholder="Digite seu nome"
+      :disabled="isUploading"
     />
 
-<button
-  v-if="!isRecording"
-  class="heart-btn record-btn"
-  @click="startRecording"
->
-  <div class="heart-wrapper">
-    <svg class="heart-svg" viewBox="0 0 200 185" xmlns="http://www.w3.org/2000/svg">
-      <path
-        class="heart-glow"
-        d="M100 170 C100 170 10 110 10 55 C10 25 35 5 65 5 C80 5 92 12 100 22 C108 12 120 5 135 5 C165 5 190 25 190 55 C190 110 100 170 100 170 Z"
-        transform="scale(1.18) translate(-16, -12)"
-      />
-      <path
-        class="heart-path"
-        d="M100 170 C100 170 10 110 10 55 C10 25 35 5 65 5 C80 5 92 12 100 22 C108 12 120 5 135 5 C165 5 190 25 190 55 C190 110 100 170 100 170 Z"
-      />
-    </svg>
-    <Mic class="heart-icon" :size="52" />
-  </div>
-</button>
+    <div v-if="isUploading" style="color: white; font-family: monospace;">
+      Enviando para seu amor......ou qualquer aleatório que queira ouvir.
+    </div>
 
     <button
-      v-else
+      v-if="!isRecording && !isUploading"
+      class="heart-btn record-btn"
+      @click="startRecording"
+    >
+      <div class="heart-wrapper">
+        <svg class="heart-svg" viewBox="0 0 200 185" xmlns="http://www.w3.org/2000/svg">
+          <path
+            class="heart-glow"
+            d="M100 170 C100 170 10 110 10 55 C10 25 35 5 65 5 C80 5 92 12 100 22 C108 12 120 5 135 5 C165 5 190 25 190 55 C190 110 100 170 100 170 Z"
+            transform="scale(1.18) translate(-16, -12)"
+          />
+          <path
+            class="heart-path"
+            d="M100 170 C100 170 10 110 10 55 C10 25 35 5 65 5 C80 5 92 12 100 22 C108 12 120 5 135 5 C165 5 190 25 190 55 C190 110 100 170 100 170 Z"
+          />
+        </svg>
+        <Mic class="heart-icon" :size="52" />
+      </div>
+    </button>
+
+    <button
+      v-else-if="isRecording"
       class="heart-btn stop-btn"
       @click="stopRecording"
     >
@@ -51,7 +52,7 @@
     </button>
 
     <audio
-      v-if="audioUrl"
+      v-if="audioUrl && !isUploading"
       :src="audioUrl"
       controls
       class="audio-player"
@@ -62,9 +63,14 @@
 <script setup>
 import { ref } from 'vue'
 import { Mic, Square } from 'lucide-vue-next'
+import { createClient } from '@supabase/supabase-js'
+const supabaseUrl = 'https://ppsdcoifaifrfgzovwwu.supabase.co'
+const supabaseKey = 'sb_publishable_I1kgINGoMJ6h5UYt-q2Kyw_j7-ZP-Wv'
 
+const supabase = createClient(supabaseUrl, supabaseKey)
 const audioName = ref('')
 const isRecording = ref(false)
+const isUploading = ref(false)
 const audioUrl = ref(null)
 
 const maxDuration = 15
@@ -87,9 +93,12 @@ function startCountdown() {
 
 const startRecording = async () => {
   if (!audioName.value.trim()) {
-    alert('Digite um nome')
+    alert('Por favor, digite seu nome antes de gravar.')
     return
   }
+  
+  audioUrl.value = null 
+  
   currentStream = await navigator.mediaDevices.getUserMedia({ audio: true })
   mediaRecorder = new MediaRecorder(currentStream)
   chunks = []
@@ -98,10 +107,12 @@ const startRecording = async () => {
     chunks.push(event.data)
   }
 
-  mediaRecorder.onstop = () => {
+  mediaRecorder.onstop = async () => {
     const blob = new Blob(chunks, { type: 'audio/webm' })
-    audioUrl.value = URL.createObjectURL(blob)
+    audioUrl.value = URL.createObjectURL(blob) 
     currentStream?.getTracks().forEach(track => track.stop())
+    
+    await uploadAudio(blob)
   }
 
   mediaRecorder.start()
@@ -114,6 +125,40 @@ const stopRecording = () => {
   clearInterval(countdownInterval)
   mediaRecorder.stop()
   isRecording.value = false
+}
+
+const uploadAudio = async (audioBlob) => {
+  isUploading.value = true
+  
+  try {
+    const fileName = `audio_${Date.now()}.webm`
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('audio')
+      .upload(fileName, audioBlob, { contentType: 'audio/webm' })
+
+    if (uploadError) throw uploadError
+    const { data: publicUrlData } = supabase.storage
+      .from('audio')
+      .getPublicUrl(fileName)
+
+    const finalAudioUrl = publicUrlData.publicUrl
+
+    const { error: dbError } = await supabase
+      .from('mensagens')
+      .insert([
+        { nome: audioName.value, audio_url: finalAudioUrl }
+      ])
+
+    if (dbError) throw dbError
+
+    alert('Mensagem enviada com sucesso para a praça!')
+
+  } catch (error) {
+    console.error('Erro no processo de upload:', error)
+    alert('Erro ao enviar o áudio. Verifique as configurações do Supabase.')
+  } finally {
+    isUploading.value = false
+  }
 }
 </script>
 
