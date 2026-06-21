@@ -1,6 +1,34 @@
 <template>
-  <div v-if="!mostrarPraca" class="container">
-    
+  <!-- TELA DE BOAS-VINDAS: aparece primeiro, antes do campo de nome -->
+  <div v-if="showWelcome" class="welcome-container">
+    <div class="welcome-card">
+      <div class="welcome-emoji">🦁</div>
+      <h1 class="welcome-title">Leão de Hermes</h1>
+      <p class="welcome-subtitle">Uma ponte virtual entre o passado e o presente</p>
+
+      <p class="welcome-text">
+        Este projeto revive a magia do <strong>Serviço de Alto-Falantes Solon Magalhães</strong>,
+        criado pelo genial <strong>Mestre Adolfo</strong> em Quixadá.
+      </p>
+
+      <p class="welcome-text">
+        Antigamente, as pessoas iam até os alto-falantes da praça para deixar recados e
+        declarações de amor. Hoje, você pode usar este microfone digital para gravar a sua
+        mensagem!
+      </p>
+
+      <div class="welcome-quote">
+        🎵 Seu áudio ficará guardado e só poderá ser ouvido através de Realidade Aumentada
+        por quem estiver fisicamente na <strong>Praça do Leão</strong>.
+      </div>
+
+      <button class="btn-comecar" @click="showWelcome = false">Começar Experiência</button>
+    </div>
+  </div>
+
+  <!-- TELA DO GRAVADOR: aparece depois que o usuário toca em "Começar Experiência" -->
+  <div v-else-if="!mostrarPraca" class="container">
+
     <div v-if="isRecording" class="timer">
       00:{{ remainingTime.toString().padStart(2, '0') }}
     </div>
@@ -80,6 +108,7 @@ import Praca from '../views/praca.vue'
 //n coloquei essa bomba em variavel de ambiente pq é só so pra ficar mais facil pra glr testar, se for implementar de verdade esconde isso.
 const supabaseUrl = 'https://ppsdcoifaifrfgzovwwu.supabase.co'
 const supabaseKey = 'sb_publishable_I1kgINGoMJ6h5UYt-q2Kyw_j7-ZP-Wv'
+const showWelcome = ref(true)
 const showModal = ref(false)
 const mostrarPraca = ref(false)
 const supabase = createClient(supabaseUrl, supabaseKey)
@@ -196,6 +225,86 @@ body {
   height: 100vh;
 }
 
+/* ===== TELA DE BOAS-VINDAS ===== */
+.welcome-container {
+  width: 100%;
+  height: 100vh;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.welcome-card {
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  font-family: sans-serif;
+}
+
+.welcome-emoji {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.welcome-title {
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+.welcome-subtitle {
+  color: #ff2d55;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.welcome-text {
+  color: #ccc;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.welcome-quote {
+  border-left: 3px solid #ff2d55;
+  background: rgba(255, 45, 85, 0.08);
+  color: #eee;
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  text-align: left;
+}
+
+.btn-comecar {
+  background: #ff2d55;
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  font-size: 1.15rem;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 8px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.btn-comecar:hover {
+  background: #ff0033;
+  transform: scale(1.02);
+}
+
+/* ===== RESTANTE DO APP ===== */
 .container {
   width: 100%;
   height: 100vh;
