@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -35,7 +35,6 @@
   
   <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;">
     <a-camera gps-camera rotation-reader></a-camera>
-    <!---->
      <a-box color="red" gps-entity-place="latitude: -4.466224; longitude: -38.900860" scale="200 200 200"></a-box>
      <a-entity
       gltf-model="url(vintage-radio.glb)"
@@ -119,6 +118,189 @@
       statusTexto.innerText = `Tocando os sons da praça... 🔊\nMensagens: ${playlist.length}`
       playerAudio.classList.remove('hidden')
       
+      playerAudio.src = playlist[0]
+      playerAudio.play()
+    })
+
+    playerAudio.addEventListener('ended', () => {
+      if (playlist.length > 1) {
+        const tocado = playlist.shift()
+        playlist.push(tocado)
+        playerAudio.src = playlist[0]
+      } else {
+        playerAudio.currentTime = 0
+      }
+      playerAudio.play()
+    })
+  </script>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Praça do Leão</title>
+
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <!-- IMPORTANTE: versão FIXA do AR.js (não usar /master/, que pode quebrar sem aviso) -->
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; font-family: sans-serif; }
+
+    #ui-layer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      background: rgba(0, 0, 0, 0.4); color: white; text-align: center;
+      pointer-events: none;
+    }
+    #ui-layer > * { pointer-events: auto; }
+
+    .btn-play {
+      background: #ff2d55; color: white; border: none; padding: 16px 32px;
+      font-size: 1.2rem; font-weight: bold; border-radius: 8px; cursor: pointer;
+      margin-top: 20px; transition: transform 0.2s;
+    }
+    .btn-play:disabled { background: #444; cursor: not-allowed; }
+    .hidden { display: none !important; }
+
+    /* Painel de debug - REMOVA depois de resolver o problema */
+    #debug-panel {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 99999;
+      background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
+      font-size: 11px; padding: 8px; text-align: left; line-height: 1.5;
+      max-height: 35vh; overflow-y: auto; white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body style="margin: 0; overflow: hidden;">
+
+  <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;">
+    <a-camera gps-camera rotation-reader camera="far: 50000; near: 0.01"></a-camera>
+
+    <!-- Cubo vermelho: serve de teste, se ESSE não aparecer o problema é geral (GPS/compass), não do modelo -->
+    <a-box id="caixa-teste" color="red" gps-entity-place="latitude: -4.466224; longitude: -38.900860" scale="5 5 5"></a-box>
+
+    <a-entity
+      id="modelo-3d"
+      gltf-model="url(vintage-radio.glb)"
+      scale="10 10 10"
+      position="0 1 0"
+      gps-entity-place="latitude: -4.466224; longitude: -38.900860;"
+    ></a-entity>
+  </a-scene>
+
+  <div id="ui-layer">
+    <h2>Bem-vindo à Praça do Leão 🦁</h2>
+    <p id="status-texto">Aguardando permissões e GPS...</p>
+
+    <button id="btn-iniciar" class="btn-play" disabled>🔒 Bloqueado</button>
+
+    <audio id="player-audio" controls class="hidden" style="margin-top: 30px; width: 300px;"></audio>
+  </div>
+
+  <!-- PAINEL DE DEBUG: mostra o que está acontecendo de verdade no seu celular -->
+  <div id="debug-panel"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    const supabaseUrl = 'https://ppsdcoifaifrfgzovwwu.supabase.co'
+    const supabaseKey = 'sb_publishable_I1kgINGoMJ6h5UYt-q2Kyw_j7-ZP-Wv'
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // 👉 COORDENADAS DA PRAÇA DO LEÃO — confira se estão certas aqui
+    const PRACA_LAT = -4.466224
+    const PRACA_LNG = -38.900860
+    const limiteMetros = 15
+    let playlist = []
+
+    const statusTexto = document.getElementById('status-texto')
+    const btnIniciar = document.getElementById('btn-iniciar')
+    const playerAudio = document.getElementById('player-audio')
+    const debugPanel = document.getElementById('debug-panel')
+
+    function log(msg) {
+      const linha = document.createElement('div')
+      linha.textContent = `${new Date().toLocaleTimeString()} | ${msg}`
+      debugPanel.appendChild(linha)
+      debugPanel.scrollTop = debugPanel.scrollHeight
+      console.log(msg)
+    }
+
+    log('Página carregada. Iniciando diagnóstico...')
+
+    // Detecta se o modelo 3D carregou ou deu erro
+    const modeloEl = document.getElementById('modelo-3d')
+    modeloEl.addEventListener('model-loaded', () => log('✅ Modelo .glb CARREGADO com sucesso.'))
+    modeloEl.addEventListener('model-error', (e) => log('❌ ERRO ao carregar o .glb: ' + JSON.stringify(e.detail)))
+
+    // Detecta quando o AR.js posiciona o objeto no mundo (e a que distância)
+    document.querySelectorAll('[gps-entity-place]').forEach((el) => {
+      el.addEventListener('gps-entity-place-update-position', (e) => {
+        log(`📍 Objeto "${el.id}" posicionado. Distância: ${e.detail.distance?.toFixed(1) ?? '?'}m`)
+      })
+      el.addEventListener('gps-entity-place-added', () => log(`➕ Objeto "${el.id}" adicionado à cena AR.`))
+    })
+
+    async function carregarAudios() {
+      const { data, error } = await supabase.from('mensagens').select('audio_url')
+      if (error) log('❌ Erro ao buscar áudios do Supabase: ' + error.message)
+      if (data && data.length > 0) {
+        playlist = data.map(item => item.audio_url).sort(() => Math.random() - 0.5)
+        log(`✅ ${playlist.length} áudio(s) carregado(s).`)
+      } else {
+        log('⚠️ Nenhum áudio encontrado no banco.')
+      }
+    }
+    carregarAudios()
+
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+      const R = 6371e3, rad = Math.PI / 180
+      const dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon/2) * Math.sin(dLon/2)
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)))
+    }
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          const dist = calcularDistancia(pos.coords.latitude, pos.coords.longitude, PRACA_LAT, PRACA_LNG)
+          log(`📡 GPS atual: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} | precisão: ${pos.coords.accuracy?.toFixed(0)}m | distância da praça: ${dist.toFixed(1)}m`)
+
+          if (dist <= limiteMetros) {
+            statusTexto.innerText = "Você chegou à praça! 🎉"
+            btnIniciar.disabled = false
+            btnIniciar.innerText = "Iniciar Experiência Sonora"
+          } else {
+            statusTexto.innerHTML = `Você está a ${dist.toFixed(0)}m da praça.<br>Caminhe até lá!`
+            btnIniciar.disabled = true
+            btnIniciar.innerText = "🔒 Bloqueado"
+          }
+        },
+        (err) => {
+          statusTexto.innerText = "Por favor, ative a localização do celular!"
+          log('❌ Erro de geolocalização: ' + err.message)
+        },
+        { enableHighAccuracy: true }
+      )
+    } else {
+      log('❌ Geolocalização não suportada neste navegador.')
+    }
+
+    btnIniciar.addEventListener('click', () => {
+      if (playlist.length === 0) {
+        alert("Nenhum áudio encontrado!")
+        return
+      }
+      btnIniciar.classList.add('hidden')
+      statusTexto.innerText = `Tocando os sons da praça... 🔊\nMensagens: ${playlist.length}`
+      playerAudio.classList.remove('hidden')
+
       playerAudio.src = playlist[0]
       playerAudio.play()
     })
