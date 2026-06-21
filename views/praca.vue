@@ -266,25 +266,22 @@ const tocarProximo = () => {
 </script>
 
 <style scoped>
-/* A magia do CSS para a câmera aparecer por baixo de tudo */
 .praca-container {
-  position: absolute; /* Descola o Vue do fundo da tela */
+  position: absolute; 
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 10; /* Coloca o Vue NA FRENTE da câmera */
+  z-index: 10; 
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* Mudamos o fundo para semi-transparente (rgba) para vermos a câmera! */
   background: rgba(5, 5, 5, 0.85); 
   color: white;
   text-align: center;
 }
 
-/* O restante do seu CSS continua... */
 .start-screen, .playing-screen { display: flex; flex-direction: column; align-items: center; gap: 20px; }
 .start-screen h2, .playing-screen h2 { font-family: sans-serif; font-size: 2rem; margin-bottom: 10px; }
 .start-screen p, .playing-screen p { color: #aaa; font-size: 1.1rem; }
@@ -303,7 +300,6 @@ const tocarProximo = () => {
 
 .btn-play:hover:not(:disabled) { background: #ff0033; transform: scale(1.05); }
 
-/* Classe para deixar o botão cinza quando estiver bloqueado */
 .btn-bloqueado {
   background: #444;
   cursor: not-allowed;
