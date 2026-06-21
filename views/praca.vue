@@ -141,7 +141,7 @@ const tocarProximo = () => {
   >
     <a-camera gps-camera rotation-reader></a-camera>
 
-    <a-box color="red" gps-entity-place="latitude: -4.970194; longitude: -39.015861" scale="2 2 2"></a-box>
+    <a-box color="red" gps-entity-place="latitude: -4.359379; longitude: -39.304868" scale="2 2 2"></a-box>
   </a-scene>
 
 
@@ -201,16 +201,14 @@ const audioAtualUrl = ref('')
 const isPlaying = ref(false)
 const meuAudio = ref(null) 
 
-// --- NOVAS VARIÁVEIS DO GPS ---
 const buscandoGps = ref(true)
-const distancia = ref(9999) // Começa com uma distância impossível
-const limiteMetros = 30 // A margem de erro (cerca virtual)
-const PRACA_LAT = -4.970194
-const PRACA_LNG = -39.015861
+const distancia = ref(9999) 
+const limiteMetros = 30 
+const PRACA_LAT = -4.359379
+const PRACA_LNG = -39.304868
 
-// Matemática para calcular a distância em metros (Haversine)
 const calcularDistancia = (lat1, lon1, lat2, lon2) => {
-  const R = 6371e3; // Raio da Terra em metros
+  const R = 6371e3; 
   const rad = Math.PI / 180;
   const dLat = (lat2 - lat1) * rad;
   const dLon = (lon2 - lon1) * rad;
@@ -218,21 +216,18 @@ const calcularDistancia = (lat1, lon1, lat2, lon2) => {
             Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
             Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c; // Retorna a distância em metros
+  return R * c;
 }
 
 onMounted(async () => {
-  // 1. Busca os áudios
   const { data, error } = await supabase.from('mensagens').select('audio_url')
   if (data && data.length > 0) {
     playlist.value = data.map(item => item.audio_url).sort(() => Math.random() - 0.5)
   }
 
-  // 2. Liga o Radar do GPS
   if ("geolocation" in navigator) {
     navigator.geolocation.watchPosition(
       (posicao) => {
-        // Pega a localização do usuário e calcula a distância até a praça
         const userLat = posicao.coords.latitude
         const userLng = posicao.coords.longitude
         distancia.value = calcularDistancia(userLat, userLng, PRACA_LAT, PRACA_LNG)
@@ -242,12 +237,11 @@ onMounted(async () => {
         alert('Por favor, ative a sua localização (GPS) para usar o site!')
         buscandoGps.value = false
       },
-      { enableHighAccuracy: true } // Pede a maior precisão possível do celular
+      { enableHighAccuracy: true } 
     )
   }
 })
 
-// O restante do seu código (iniciarExperiencia, tocarProximo) continua igualzinho...
 const iniciarExperiencia = () => {
   if (playlist.value.length === 0) {
     alert('A praça está silenciosa... Volte ao museu e grave a primeira mensagem!')
