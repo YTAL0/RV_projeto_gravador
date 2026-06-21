@@ -32,7 +32,12 @@
 
   <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;">
     <a-camera gps-camera rotation-reader></a-camera>
-    <a-box color="red" gps-entity-place="latitude: -4.359379; longitude: -39.304868" scale="2 2 2"></a-box>
+    <!--<a-box color="red" gps-entity-place="latitude: -4.359379; longitude: -39.304868" scale="2 2 2"></a-box>-->
+     <a-entity
+          gltf-model="url(/vintage radio.glb)"
+          scale="900 900 900"
+          gps-entity-place="latitude: -4.466107; longitude: -38.900730;"
+        ></a-entity>
   </a-scene>
 
   <div id="ui-layer">
@@ -51,8 +56,11 @@
     const supabaseKey = 'sb_publishable_I1kgINGoMJ6h5UYt-q2Kyw_j7-ZP-Wv'
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const PRACA_LAT = -4.359379
-    const PRACA_LNG = -39.304868
+    //const PRACA_LAT = -4.359379
+    //const PRACA_LNG = -39.304868
+
+    const PRACA_LAT = -4.466107
+    const PRACA_LNG = -38.900730
     const limiteMetros = 30
     let playlist = []
 
