@@ -179,17 +179,17 @@
 
 <body style="margin: 0; overflow: hidden;">
 
-  <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;">
+  <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: false; debugUIEnabled: false;">
     <a-camera gps-camera rotation-reader camera="far: 50000; near: 0.01"></a-camera>
 
-    <!-- Cubo vermelho: serve de teste, se ESSE não aparecer o problema é geral
-    <a-box id="caixa-teste" color="red" gps-entity-place="latitude: -4.466224; longitude: -38.900860" scale="5 5 5"></a-box>
-    -->
+    <!-- Cubo vermelho: serve de teste, deslocado pra não tampar o modelo -->
+    <a-box id="caixa-teste" color="red" gps-entity-place="latitude: -4.466234; longitude: -38.900870" scale="5 5 5"></a-box>
+
     <a-entity
       id="modelo-3d"
       gltf-model="url(vintage-radio.glb)"
-      scale="500 500 500"
-      position="0 1 0"
+      scale="1 1 1"
+      position="0 0 0"
       gps-entity-place="latitude: -4.466224; longitude: -38.900860;"
     ></a-entity>
   </a-scene>
@@ -236,7 +236,31 @@
 
     // Detecta se o modelo 3D carregou ou deu erro
     const modeloEl = document.getElementById('modelo-3d')
-    modeloEl.addEventListener('model-loaded', () => log('✅ Modelo .glb CARREGADO com sucesso.'))
+    modeloEl.addEventListener('model-loaded', (e) => {
+      log('✅ Modelo .glb CARREGADO com sucesso.')
+
+      // Força os materiais a renderizarem dos dois lados — evita o
+      // modelo "sumir" caso a câmera fique dentro da geometria dele
+      const objeto3D = e.detail.model
+      let temMalha = false
+      objeto3D.traverse((node) => {
+        if (node.isMesh) {
+          temMalha = true
+          if (Array.isArray(node.material)) {
+            node.material.forEach(mat => mat.side = THREE.DoubleSide)
+          } else if (node.material) {
+            node.material.side = THREE.DoubleSide
+          }
+        }
+      })
+      log(temMalha ? '✅ Malhas (meshes) encontradas no modelo.' : '⚠️ Modelo carregou mas NÃO tem nenhuma malha visível dentro do arquivo.')
+
+      // Mostra o tamanho real do modelo em metros, pra calibrar a escala certa
+      const caixaEnvolvente = new THREE.Box3().setFromObject(objeto3D)
+      const tamanho = new THREE.Vector3()
+      caixaEnvolvente.getSize(tamanho)
+      log(`📦 Tamanho do modelo (antes da escala): X=${tamanho.x.toFixed(2)}m Y=${tamanho.y.toFixed(2)}m Z=${tamanho.z.toFixed(2)}m`)
+    })
     modeloEl.addEventListener('model-error', (e) => log('❌ ERRO ao carregar o .glb: ' + JSON.stringify(e.detail)))
 
     // Detecta quando o AR.js posiciona o objeto no mundo (e a que distância)
