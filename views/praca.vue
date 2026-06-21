@@ -135,30 +135,20 @@ const tocarProximo = () => {
 }
 </style> -->
 <template>
-  <a-scene
-    vr-mode-ui="enabled: false"
-    arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
-  >
-    <a-camera gps-camera rotation-reader></a-camera>
-
-    <a-box color="red" gps-entity-place="latitude: -4.359379; longitude: -39.304868" scale="2 2 2"></a-box>
-  </a-scene>
-
-
   <div class="praca-container">
     
     <div v-if="!isPlaying" class="start-screen">
       <h2>Bem-vindo à Praça do Leão 🦁</h2>
       
-      <p v-if="buscandoGps">Procurando satélites... 🛰️</p>
+      <p v-if="buscandoGps">A procurar satélites... 🛰️</p>
       
       <div v-else>
         <p v-if="distancia > limiteMetros">
-          Você está a {{ distancia.toFixed(0) }} metros da praça.<br>
-          Caminhe até o local para liberar os áudios! 🚶‍♂️
+          Está a {{ distancia.toFixed(0) }} metros da praça.<br>
+          Caminhe até ao local para libertar os áudios! 🚶‍♂️
         </p>
         <p v-else>
-          Você chegou à praça! 🎉
+          Chegou à praça! 🎉
         </p>
       </div>
 
@@ -173,7 +163,7 @@ const tocarProximo = () => {
     </div>
 
     <div v-else class="playing-screen">
-      <h2>Tocando os sons da praça... 🔊</h2>
+      <h2>A tocar os sons da praça... 🔊</h2>
       <p>Quantidade de mensagens enviadas: {{ playlist.length }}</p>
 
       <audio
@@ -201,14 +191,19 @@ const audioAtualUrl = ref('')
 const isPlaying = ref(false)
 const meuAudio = ref(null) 
 
+// --- VARIÁVEIS DO GPS ---
 const buscandoGps = ref(true)
-const distancia = ref(9999) 
-const limiteMetros = 30 
+const distancia = ref(9999) // Começa com uma distância impossível
+const limiteMetros = 30 // A margem de erro (cerca virtual)
+
+// ATENÇÃO: Deixei as coordenadas da sua casa para continuar os testes. 
+// Lembre-se de trocar para as da Praça (-4.970194, -39.015861) no dia da apresentação!
 const PRACA_LAT = -4.359379
 const PRACA_LNG = -39.304868
 
+// Matemática para calcular a distância em metros (Haversine)
 const calcularDistancia = (lat1, lon1, lat2, lon2) => {
-  const R = 6371e3; 
+  const R = 6371e3; // Raio da Terra em metros
   const rad = Math.PI / 180;
   const dLat = (lat2 - lat1) * rad;
   const dLon = (lon2 - lon1) * rad;
@@ -216,15 +211,17 @@ const calcularDistancia = (lat1, lon1, lat2, lon2) => {
             Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
             Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
+  return R * c; // Retorna a distância em metros
 }
 
 onMounted(async () => {
+  // 1. Busca os áudios no Supabase
   const { data, error } = await supabase.from('mensagens').select('audio_url')
   if (data && data.length > 0) {
     playlist.value = data.map(item => item.audio_url).sort(() => Math.random() - 0.5)
   }
 
+  // 2. Liga o Radar do GPS
   if ("geolocation" in navigator) {
     navigator.geolocation.watchPosition(
       (posicao) => {
@@ -266,6 +263,7 @@ const tocarProximo = () => {
 </script>
 
 <style scoped>
+/* O contentor agora cobre o ecrã inteiro com fundo semi-transparente */
 .praca-container {
   position: absolute; 
   top: 0;
@@ -277,7 +275,8 @@ const tocarProximo = () => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: rgba(5, 5, 5, 0.85); 
+  /* Fundo translúcido para que o AR.js e a câmara sejam visíveis por trás */
+  background: rgba(5, 5, 5, 0.3); 
   color: white;
   text-align: center;
 }
