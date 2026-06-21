@@ -96,7 +96,7 @@ let countdownInterval
 let currentStream
 
 const goToPraca = () => {
-  window.location.href = '/RV_projeto_gravador/praca.html'';
+  window.location.href = '/RV_projeto_gravador/praca.html';
 }
 function startCountdown() {
   remainingTime.value = maxDuration
