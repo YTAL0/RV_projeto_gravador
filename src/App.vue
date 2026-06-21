@@ -188,7 +188,7 @@ const uploadAudio = async (audioBlob) => {
 }
 
 body {
-  background: #000;
+  background: transparent;
   overflow: hidden;
 }
 
