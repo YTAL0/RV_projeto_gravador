@@ -178,7 +178,7 @@
       gltf-model="url(phone.glb)"
       scale="9 9 9"
       position="10 20 10"
-      gps-entity-place="latitude: -4.97150737796642; longitude: -39.019526465595156;"
+      gps-entity-place="latitude: -4.970243409416001; longitude: -39.015764991627115;"
     ></a-entity>
   </a-scene>
   <div id="ui-layer">
@@ -195,11 +195,10 @@
     const supabaseUrl = 'https://ppsdcoifaifrfgzovwwu.supabase.co'
     const supabaseKey = 'sb_publishable_I1kgINGoMJ6h5UYt-q2Kyw_j7-ZP-Wv'
     const supabase = createClient(supabaseUrl, supabaseKey)
-    const PRACA_LAT = -4.97150737796642
-    const PRACA_LNG = -39.019526465595156
+    const PRACA_LAT = -4.970243409416001
+    const PRACA_LNG = -39.015764991627115
     const limiteMetros = 15
     let playlist = []
-
     const statusTexto = document.getElementById('status-texto')
     const btnIniciar = document.getElementById('btn-iniciar')
     const playerAudio = document.getElementById('player-audio')
