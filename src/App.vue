@@ -1,5 +1,4 @@
 <template>
-  <!-- TELA DE BOAS-VINDAS: aparece primeiro, antes do campo de nome -->
   <div v-if="showWelcome" class="welcome-container">
     <div class="welcome-card">
       <div class="welcome-emoji">🦁</div>
@@ -25,8 +24,6 @@
       <button class="btn-comecar" @click="showWelcome = false">Começar Experiência</button>
     </div>
   </div>
-
-  <!-- TELA DO GRAVADOR: aparece depois que o usuário toca em "Começar Experiência" -->
   <div v-else-if="!mostrarPraca" class="container">
 
     <div v-if="isRecording" class="timer">
@@ -106,8 +103,8 @@ import { Mic, Square } from 'lucide-vue-next'
 import { createClient } from '@supabase/supabase-js'
 import Praca from '../views/praca.vue' 
 //n coloquei essa bomba em variavel de ambiente pq é só so pra ficar mais facil pra glr testar, se for implementar de verdade esconde isso.
-const supabaseUrl = 'https://ppsdcoifaifrfgzovwwu.supabase.co'
-const supabaseKey = 'sb_publishable_I1kgINGoMJ6h5UYt-q2Kyw_j7-ZP-Wv'
+const supabaseUrl = ''
+const supabaseKey = ''//Retirei a token por segurança
 const showWelcome = ref(true)
 const showModal = ref(false)
 const mostrarPraca = ref(false)
@@ -225,7 +222,6 @@ body {
   height: 100vh;
 }
 
-/* ===== TELA DE BOAS-VINDAS ===== */
 .welcome-container {
   width: 100%;
   height: 100vh;
@@ -304,7 +300,6 @@ body {
   transform: scale(1.02);
 }
 
-/* ===== RESTANTE DO APP ===== */
 .container {
   width: 100%;
   height: 100vh;
